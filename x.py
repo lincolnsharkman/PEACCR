@@ -43,7 +43,7 @@ def get_current_prices():
     btc_usd = requests.get("https://api.coindesk.com/v1/bpi/currentprice/BTC.json").json()["bpi"]["USD"]["rate"]
 
     gold_response = requests.get("https://www.goldapi.io/api/XAU/USD").json()
-    gold_price = gold_response["price"] if "price" in gold_response else "N/A"
+    gold_price = gold_response["price"] if "price" in gold_response else None
 
     irr_usd = requests.get("https://api.exchangerate-api.com/v4/latest/IRR").json()["rates"]["USD"]
     return btc_usd, gold_price, irr_usd
@@ -129,11 +129,12 @@ if "unique_code" in st.session_state:
 st.sidebar.title("Current Prices")
 btc_usd, gold_price, irr_usd = get_current_prices()
 st.sidebar.write(f"BTC to USD: {btc_usd}")
-st.sidebar.write(f"Gold Price (USD): {gold_price}")
+st.sidebar.write(f"Gold Price (USD): {gold_price if gold_price else 'N/A'}")
 st.sidebar.write(f"IRR to USD: {irr_usd}")
 
 # Plot current prices
 st.sidebar.write("### Current Prices Graph")
 fig, ax = plt.subplots()
-ax.bar(["BTC to USD", "Gold Price (USD)", "IRR to USD"], [btc_usd, gold_price, irr_usd])
+ax.bar(["BTC to USD", "Gold Price (USD)", "IRR to USD"],
+       [float(btc_usd.replace(',', '')), gold_price if gold_price else 0, irr_usd])
 st.sidebar.pyplot(fig)
