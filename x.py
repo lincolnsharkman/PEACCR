@@ -4,10 +4,13 @@ import json
 import uuid
 import pandas as pd
 import matplotlib.pyplot as plt
+import requests
+
 
 # Function to generate a unique code
 def generate_unique_code():
     return str(uuid.uuid4())
+
 
 # Function to create a new user file
 def create_user_file(username, unique_code):
@@ -19,6 +22,7 @@ def create_user_file(username, unique_code):
     with open(f"{unique_code}.json", "w") as file:
         json.dump(user_data, file)
 
+
 # Function to load user data
 def load_user_data(unique_code):
     if os.path.exists(f"{unique_code}.json"):
@@ -27,10 +31,23 @@ def load_user_data(unique_code):
     else:
         return None
 
+
 # Function to save user data
 def save_user_data(unique_code, user_data):
     with open(f"{unique_code}.json", "w") as file:
         json.dump(user_data, file)
+
+
+# Function to get current prices
+def get_current_prices():
+    btc_usd = requests.get("https://api.coindesk.com/v1/bpi/currentprice/BTC.json").json()["bpi"]["USD"]["rate"]
+
+    gold_response = requests.get("https://www.goldapi.io/api/XAU/USD").json()
+    gold_price = gold_response["price"] if "price" in gold_response else "N/A"
+
+    irr_usd = requests.get("https://api.exchangerate-api.com/v4/latest/IRR").json()["rates"]["USD"]
+    return btc_usd, gold_price, irr_usd
+
 
 # Streamlit app
 st.title("Personal Accountant App")
@@ -107,3 +124,16 @@ if "unique_code" in st.session_state:
     if st.button("Reset"):
         create_user_file(user_data["username"], st.session_state.unique_code)
         st.write("User data reset successfully")
+
+# Display current prices and graphs
+st.sidebar.title("Current Prices")
+btc_usd, gold_price, irr_usd = get_current_prices()
+st.sidebar.write(f"BTC to USD: {btc_usd}")
+st.sidebar.write(f"Gold Price (USD): {gold_price}")
+st.sidebar.write(f"IRR to USD: {irr_usd}")
+
+# Plot current prices
+st.sidebar.write("### Current Prices Graph")
+fig, ax = plt.subplots()
+ax.bar(["BTC to USD", "Gold Price (USD)", "IRR to USD"], [btc_usd, gold_price, irr_usd])
+st.sidebar.pyplot(fig)
